@@ -2,6 +2,7 @@
 import streamlit as st
 import joblib
 import numpy as np
+import datetime
 
 # 1. Model aur Features Load karna
 model = joblib.load('model.pkl')
@@ -34,11 +35,38 @@ with col2:
     co = st.number_input("CO (Carbon Monoxide)", min_value=0.0, value=0.8)
 
 # 3. Prediction Logic
+import datetime
+
 if st.button("Predict Air Quality"):
-    # Report ke 15 features ka array (Year=2026, Month=3, Day=29 default)
-    # Baaki values ko 0 rakha hai kyunki unka impact kam hai
-    features = np.array([[pm25, pm10, 0, no2, 0, 0, co, 0, 0, 0, 0, 0, 2026, 3, 29]])
-    prediction = model.predict(features)[0]
+    # Current date se temporal features nikalna [cite: 63, 69]
+    today = datetime.datetime.now()
+    curr_year, curr_month, curr_day = today.year, today.month, today.day
+
+    # Report Algorithm 1 & 2 ke exact order mein features [cite: 86, 92]
+    # Order: PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3, Benzene, Toluene, Xylene, Year, Month, Day
+    input_data = [
+        pm25,      # PM2.5 [cite: 130, 143]
+        pm10,      # PM10 [cite: 130, 143]
+        0.0,       # NO (Placeholder)
+        no2,       # NO2 [cite: 130, 143]
+        0.0,       # NOx (Placeholder)
+        0.0,       # NH3 (Placeholder)
+        co,        # CO [cite: 130]
+        0.0,       # SO2 (Placeholder)
+        0.0,       # O3 (Placeholder)
+        0.0,       # Benzene (Placeholder)
+        0.0,       # Toluene (Placeholder)
+        0.0,       # Xylene (Placeholder)
+        curr_year, # Year [cite: 144]
+        curr_month,# Month [cite: 144]
+        curr_day   # Day [cite: 144]
+    ]
+
+    # Model ko 2D array (1, 15) format mein dena 
+    features_reshaped = np.array([input_data])
+    
+    # Final Prediction
+    prediction = model.predict(features_reshaped)[0]
     aqi = round(prediction, 2)
 
     # 4. Color-Coded Results & Health Advice [Source 10, 165]
